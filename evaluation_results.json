@@ -1,0 +1,188 @@
+{
+  "model": "distilbert-base-uncased",
+  "hyperparameters": {
+    "epochs": 3,
+    "learning_rate": 2e-05,
+    "batch_size": 16
+  },
+  "test_size": 33,
+  "baseline": {
+    "model": "llama-3.3-70b-versatile (Groq zero-shot)",
+    "accuracy": 0.3333333333333333,
+    "per_class": {
+      "analysis": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 11.0
+      },
+      "hot_take": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 11.0
+      },
+      "reaction": {
+        "precision": 0.3333333333333333,
+        "recall": 1.0,
+        "f1-score": 0.5,
+        "support": 11.0
+      },
+      "accuracy": 0.3333333333333333,
+      "macro avg": {
+        "precision": 0.1111111111111111,
+        "recall": 0.3333333333333333,
+        "f1-score": 0.16666666666666666,
+        "support": 33.0
+      },
+      "weighted avg": {
+        "precision": 0.1111111111111111,
+        "recall": 0.3333333333333333,
+        "f1-score": 0.16666666666666666,
+        "support": 33.0
+      }
+    }
+  },
+  "finetuned": {
+    "model": "distilbert-base-uncased",
+    "accuracy": 0.7878787878787878,
+    "per_class": {
+      "analysis": {
+        "precision": 0.6470588235294118,
+        "recall": 1.0,
+        "f1-score": 0.7857142857142857,
+        "support": 11.0
+      },
+      "hot_take": {
+        "precision": 0.8333333333333334,
+        "recall": 0.45454545454545453,
+        "f1-score": 0.5882352941176471,
+        "support": 11.0
+      },
+      "reaction": {
+        "precision": 1.0,
+        "recall": 0.9090909090909091,
+        "f1-score": 0.9523809523809523,
+        "support": 11.0
+      },
+      "accuracy": 0.7878787878787878,
+      "macro avg": {
+        "precision": 0.8267973856209151,
+        "recall": 0.787878787878788,
+        "f1-score": 0.7754435107376283,
+        "support": 33.0
+      },
+      "weighted avg": {
+        "precision": 0.8267973856209151,
+        "recall": 0.7878787878787878,
+        "f1-score": 0.7754435107376284,
+        "support": 33.0
+      }
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "analysis",
+      "hot_take",
+      "reaction"
+    ],
+    "matrix": [
+      [
+        11,
+        0,
+        0
+      ],
+      [
+        6,
+        5,
+        0
+      ],
+      [
+        0,
+        1,
+        10
+      ]
+    ]
+  },
+  "misclassified_examples": [
+    {
+      "text": "That was intentional. The Thunder were $30M under the cap, spent it all on Hartenstein, then used Bird Rights to go over the cap re-signing Joe/Wiggins.",
+      "true_label": "hot_take",
+      "predicted_label": "analysis",
+      "confidence": 0.414
+    },
+    {
+      "text": "Which star/team are you rooting for to get their first championship if you aren\u2019t a fan of any of these franchises? Indiana-Tyrese Haliburton Minnesota-Anthony Edwards New York-Jalen Brunson Oklahoma City-Shai Gilgeous-Alexander",
+      "true_label": "hot_take",
+      "predicted_label": "analysis",
+      "confidence": 0.419
+    },
+    {
+      "text": "If Shai Gilgeous Alexander wins the MVP this season, which he is generally favoured to do so, Joel Embiid will remain as the only MVP to never make the Conference Finals",
+      "true_label": "hot_take",
+      "predicted_label": "analysis",
+      "confidence": 0.44
+    },
+    {
+      "text": "Joker has a title, has a known personality, and is a bigger figure than SGA. SGA is on a real team, a man IN a band while Joker is seen more like Lebron, a man WITH a band. And look at the Celtics, Except for Bostonians already no one cares. Like a ChatGPT champion that was hallucinated, had a great season and then was fact checked. OKC will get the same treatment two weeks from now, win or lose AGAIN. ANT will be talked about either way and SGA and his merry band will disappear. Until they win the title, they're not a big story. If they lose, more stories will be written about their GM and their assets and potential trades than how great SGA is. Like the Rams team that won with someone else's players. It isnt' fair to OKC, but flying under the radar was part of their success. ANT, Hali and Brunson are all bigger stars. It happens. Didn't stop Tatum and Brown from winning last year.",
+      "true_label": "hot_take",
+      "predicted_label": "analysis",
+      "confidence": 0.457
+    },
+    {
+      "text": "Choose an NBA TEAM while being from Europe",
+      "true_label": "reaction",
+      "predicted_label": "hot_take",
+      "confidence": 0.34
+    },
+    {
+      "text": "I am following this NBA playoff and I have the feeling that defense is not clean often. What I don't like about It Is the feeling of a lack of consistency moreover I do belive that this discretionality Is a perfect space to influence games outcome in a way that makes me appreciate less the games. Ambiguity should be reduce as possible as much as possible but I have the feeling that this Is not what the league wants that or Is taking enough effort to do It. NBA officiating is crucial to have a good product, they should be a focus for the league to improve the execution. Is anybody sharing the same feeling?",
+      "true_label": "hot_take",
+      "predicted_label": "analysis",
+      "confidence": 0.425
+    },
+    {
+      "text": "i think this stat is only counting players that make the team in the same season that they play with jokic. still dumb because murray has played to an all-star level throughout his playoff career, even if he isn't officially an all-star.",
+      "true_label": "hot_take",
+      "predicted_label": "analysis",
+      "confidence": 0.464
+    }
+  ],
+  "sample_classifications": [
+    {
+      "text": "OKCs 32pt win over the Nuggets in game 7 is the 7th largest margin of victory in a game 7 in the history of the NBA playoffs.",
+      "true_label": "analysis",
+      "predicted_label": "analysis",
+      "confidence": 0.487,
+      "correct": true
+    },
+    {
+      "text": "Interesting observation since the current era of NBA stars has been dominated by European stars like Luka, Jokic and Giannis 2025 - Brunson (Knicks), Haliburton (Pacers) | Ant (Timberwolves), SGA (Thu",
+      "true_label": "analysis",
+      "predicted_label": "analysis",
+      "confidence": 0.453,
+      "correct": true
+    },
+    {
+      "text": "This sub during playoffs is bunch of toxic posts for karma farming. Doesn't even bother to appreciate the game. Watching Nikola and this Denver team is peak fun for me. Who cares if they are not winni",
+      "true_label": "hot_take",
+      "predicted_label": "hot_take",
+      "confidence": 0.392,
+      "correct": true
+    },
+    {
+      "text": "SGA flops on the \u201celbow to the face\u201d",
+      "true_label": "reaction",
+      "predicted_label": "reaction",
+      "confidence": 0.376,
+      "correct": true
+    },
+    {
+      "text": "i think this stat is only counting players that make the team in the same season that they play with jokic. still dumb because murray has played to an all-star level throughout his playoff career, eve",
+      "true_label": "hot_take",
+      "predicted_label": "analysis",
+      "confidence": 0.464,
+      "correct": false
+    }
+  ]
+}
