@@ -1,0 +1,39 @@
+{
+  "test_size": 33,
+  "overall_accuracy": 0.7879,
+  "avg_confidence": 0.4225,
+  "buckets": [
+    {
+      "range": "0%-35%",
+      "n": 2,
+      "accuracy": 0.5,
+      "avg_confidence": 0.343
+    },
+    {
+      "range": "35%-40%",
+      "n": 10,
+      "accuracy": 1.0,
+      "avg_confidence": 0.381
+    },
+    {
+      "range": "40%-45%",
+      "n": 9,
+      "accuracy": 0.556,
+      "avg_confidence": 0.419
+    },
+    {
+      "range": "45%-50%",
+      "n": 11,
+      "accuracy": 0.818,
+      "avg_confidence": 0.47
+    },
+    {
+      "range": "50%-100%",
+      "n": 1,
+      "accuracy": 1.0,
+      "avg_confidence": 0.5
+    }
+  ],
+  "calibration_verdict": "Weakly calibrated: accuracy rises with confidence bucket (0.5 below 35% conf \u2192 1.0 above 50% conf). Most predictions sit in 37\u201348% confidence, so the model is generally uncertain.",
+  "monotonic_increase": true
+}

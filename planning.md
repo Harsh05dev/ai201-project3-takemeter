@@ -109,8 +109,21 @@ Asked Claude to generate boundary posts between `analysis` and `hot_take`. Produ
 ### Annotation assistance
 Used Groq `llama-3.3-70b-versatile` to pre-label all 220 fetched examples with label definitions in the prompt. **Every label manually reviewed** in `scripts/collect_data.py` review pass; ~18% of pre-labels were corrected. Pre-labeled rows tracked via `notes` column (`pre-labeled, reviewed`).
 
-### Failure analysis (planned for Milestone 6)
-Will paste misclassified test examples into Claude and ask for systematic patterns (length, sarcasm, label-pair confusion). Will verify each pattern against 3+ examples before including in README.
+### Failure analysis (completed — Milestone 6)
+Pasted misclassified test examples into Claude; identified systematic pattern: **hot_take → analysis** on posts with embedded facts or length. Verified against all 7 test errors. Documented in README Stretch: Error Pattern Analysis.
+
+---
+
+## Stretch Features (added before implementation)
+
+### Inter-Annotator Reliability
+35 held-out examples independently re-labeled by a secondary reviewer (blind to primary labels, same `planning.md` definitions). Agreement measured with Cohen's kappa. See `data/inter_annotator_sample.csv`.
+
+### Confidence Calibration
+Bin test-set predictions by confidence bucket; verify higher confidence correlates with higher accuracy. See `scripts/calibration_analysis.py`.
+
+### Deployed Interface
+Gradio web UI (`app.py`) — accepts new post, returns label + confidence scores.
 
 ---
 

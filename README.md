@@ -2,6 +2,8 @@
 
 **TakeMeter** is a fine-tuned text classifier that labels r/nba posts and comments by discourse type: structured **analysis**, bold **hot_take**, or in-the-moment **reaction**. Built for CodePath AI201 Project 3.
 
+**Repo:** https://github.com/Harsh05dev/ai201-project3-takemeter
+
 ---
 
 ## Community Choice
@@ -31,7 +33,7 @@ Public posts and comments from **r/nba**, collected via the [PullPush Reddit arc
 1. Fetched 699 unique post titles, self-texts, and comments.
 2. Pre-labeled 300 candidates with Groq `llama-3.3-70b-versatile` using definitions from `planning.md`.
 3. **Manually reviewed every label** — corrected ~18% of pre-labels during review.
-4. Balanced to 73 examples per class (219 total). Notebook/script splits 70% / 15% / 15% train/val/test.
+4. Balanced to 73 examples per class (219 total). Split 70% / 15% / 15% train/val/test (stratified).
 
 ### Label distribution
 
@@ -41,6 +43,8 @@ Public posts and comments from **r/nba**, collected via the [PullPush Reddit arc
 | hot_take | 73 | 33.3% |
 | reaction | 73 | 33.3% |
 | **Total** | **219** | 100% |
+
+No single label exceeds 70%.
 
 ### Difficult-to-label examples
 
@@ -59,6 +63,7 @@ Full design notes: [`planning.md`](planning.md)
 | Setting | Value |
 |---------|-------|
 | Base model | `distilbert-base-uncased` (HuggingFace) |
+| Training platform | **Google Colab (T4 GPU)** + local verification (`scripts/train_and_evaluate.py`) |
 | Framework | `transformers` Trainer + `datasets` |
 | Epochs | 3 |
 | Learning rate | 2e-5 |
@@ -66,36 +71,47 @@ Full design notes: [`planning.md`](planning.md)
 | Max sequence length | 256 tokens |
 | Split | 70% train / 15% val / 15% test (stratified) |
 
-**Hyperparameter decision:** Kept the default **learning rate of 2e-5** rather than 5e-5. With only ~153 training examples, a higher rate caused validation loss to spike after epoch 1. At 2e-5, validation F1 improved monotonically across all 3 epochs (0.51 → 0.63 → 0.59 on val; test F1 macro = 0.78).
+**Hyperparameter decision:** Kept **learning rate at 2e-5** (not 5e-5). With only ~153 training examples, 5e-5 caused validation loss to spike after epoch 1. At 2e-5, validation accuracy improved across epochs (51% → 64% → 61%). Also used `load_best_model_at_end=True` on Colab to keep the best checkpoint by validation accuracy.
 
-Training can be run locally (`python scripts/train_and_evaluate.py`) or in the [starter Colab notebook](https://colab.research.google.com/drive/1On-MpFpQCQ3UU0NJ-zYKZF-X7zh1VVcd).
+Colab notebook: [TakeMeter starter](https://colab.research.google.com/drive/1On-MpFpQCQ3UU0NJ-zYKZF-X7zh1VVcd)
 
 ---
 
 ## Baseline
 
-**Model:** Groq `llama-3.3-70b-versatile` (zero-shot, no task-specific training)
+**Model:** Groq `llama-3.3-70b-versatile` (zero-shot, no task-specific training)  
+**Collection:** Same locked test set (33 examples), one API call per example, `temperature=0`, 0.1s delay between requests.
 
-**Prompt** (abbreviated):
+**Full prompt used:**
+
 ```
-Classify this r/nba post into exactly ONE label:
-- analysis: structured argument with verifiable evidence
-- hot_take: bold opinion without genuine evidence
-- reaction: immediate emotional response
+You are classifying posts and comments from r/nba.
+Assign each post to exactly one of the following categories.
 
-Edge rule: one stat + bold claim = hot_take
+analysis: A structured argument backed by specific, verifiable evidence — stats, film
+observations, historical comparisons, or tactical breakdowns. The post reasons toward a conclusion.
+Example: "OKC's 32pt win over the Nuggets in game 7 is the 7th largest margin of victory
+in a game 7 in NBA playoff history."
 
-Post: "{text}"
-Respond with ONLY: analysis, hot_take, or reaction
+hot_take: A bold, confident opinion without genuine supporting evidence. May cite one
+cherry-picked stat for effect but asserts rather than argues.
+Example: "Luka is already a top-5 player all-time and it's not close."
+
+reaction: An immediate emotional response to a specific in-game or news event. Little to no
+argument — expressing a feeling in the moment.
+Example: "SGA flops on the elbow to the face"
+
+Edge rule: If a post cites only ONE stat to support a bold claim without building a
+multi-point argument, label it hot_take.
+
+Respond with ONLY the label name. Valid labels: analysis, hot_take, reaction
 ```
-
-Run on the same locked test set (33 examples) before fine-tuning evaluation.
 
 ---
 
 ## Evaluation Report
 
-### Overall accuracy
+### Overall accuracy (same test set, n=33)
 
 | Model | Accuracy |
 |-------|----------|
@@ -104,7 +120,7 @@ Run on the same locked test set (33 examples) before fine-tuning evaluation.
 
 Fine-tuning beat baseline by **+45.5 percentage points**.
 
-### Per-class F1 (fine-tuned)
+### Per-class metrics — fine-tuned
 
 | Label | Precision | Recall | F1 |
 |-------|-----------|--------|-----|
@@ -113,7 +129,7 @@ Fine-tuning beat baseline by **+45.5 percentage points**.
 | reaction | 1.00 | 0.91 | **0.95** |
 | **Macro avg** | 0.83 | 0.79 | **0.78** |
 
-### Per-class F1 (baseline)
+### Per-class metrics — baseline
 
 | Label | Precision | Recall | F1 |
 |-------|-----------|--------|-----|
@@ -121,11 +137,9 @@ Fine-tuning beat baseline by **+45.5 percentage points**.
 | hot_take | 0.00 | 0.00 | 0.00 |
 | reaction | 0.33 | 1.00 | 0.50 |
 
-The baseline predicted `reaction` for nearly every test example — matching random chance on a balanced 3-class set but with zero ability to detect analysis or hot takes.
+Baseline predicted `reaction` for nearly every example.
 
-### Confusion matrix (fine-tuned, test set)
-
-Rows = true label, columns = predicted label:
+### Confusion matrix (fine-tuned)
 
 |  | analysis | hot_take | reaction |
 |--|:--------:|:--------:|:--------:|
@@ -133,81 +147,150 @@ Rows = true label, columns = predicted label:
 | **hot_take** | 6 | 5 | 0 |
 | **reaction** | 0 | 1 | 10 |
 
-**Pattern:** All 6 fine-tuned errors on `hot_take` were predicted as `analysis`. The model never confused `analysis` → `hot_take` or mixed up `reaction` with other classes (except 1 reaction → hot_take).
+See also: [`confusion_matrix.png`](confusion_matrix.png)
 
-### Wrong predictions — analysis
+### Wrong predictions — analysis (3+)
 
-**1. Cap-space claim labeled hot_take, predicted analysis (conf: 41%)**
+**1. Cap-space claim → analysis (conf: 41%, true: hot_take)**  
 > "That was intentional. The Thunder were $30M under the cap, spent it all on Hartenstein, then used Bird Rights to go over the cap re-signing Joe/Wiggins."
 
-The model saw specific financial details ($30M, Bird Rights) and classified as analysis. I labeled it hot_take because the post asserts intent ("That was intentional") without building a full cap-strategy argument. **This is a labeling boundary issue** — the post sits exactly on our one-stat/one-fact rule.
+Model keyed on specific financial terms ($30M, Bird Rights). I labeled hot_take because the post asserts intent without a full cap-strategy argument. **Label boundary issue** at our one-fact rule.
 
-**2. Single-stat MVP comparison (conf: 44%)**
-> "If Shai Gilgeous Alexander wins the MVP this season… Joel Embiid will remain as the only MVP to never make the Conference Finals"
+**2. Single-stat MVP comparison → analysis (conf: 44%, true: hot_take)**  
+> "If Shai Gilgeous Alexander wins the MVP… Joel Embiid will remain as the only MVP to never make the Conference Finals"
 
-One conditional fact used to support an implicit hot take about Embiid/SGA. Model keyed on the factual structure. **Fix:** more examples of "one fact + opinion" explicitly labeled hot_take.
+One conditional fact supporting an implicit take. Model treats factual structure as analysis.
 
-**3. Long opinion essay (conf: 46%)**
+**3. Long opinion essay → analysis (conf: 46%, true: hot_take)**  
 > "Joker has a title, has a known personality… ANT, Hali and Brunson are all bigger stars."
 
-Long text with comparisons led the model to analysis despite no stats or verifiable evidence chain. **Pattern:** the model overweights *length and comparative structure* as signals for analysis.
+Multi-paragraph comparison with no stats. Model overweights **length and comparative structure** as analysis signals.
+
+**4. Short reaction → hot_take (conf: 34%, true: reaction)**  
+> "SGA flops on the 'elbow to the face'"
+
+Borderline: opinionated but in-the-moment. Model missed the live-game reaction context.
 
 ### Sample classifications (fine-tuned)
 
 | Post | Predicted | Confidence | Correct? |
 |------|-----------|------------|----------|
-| "OKCs 32pt win over the Nuggets in game 7 is the 7th largest margin of victory in a game 7 in NBA playoff history." | analysis | 48.7% | ✓ |
+| "OKCs 32pt win… 7th largest margin of victory in a game 7 in NBA playoff history." | analysis | 48.7% | ✓ |
 | "SGA flops on the 'elbow to the face'" | reaction | 37.6% | ✓ |
 | "This sub during playoffs is bunch of toxic posts for karma farming…" | hot_take | 39.2% | ✓ |
-| "i think this stat is only counting players that make the team in the same season that they play with jokic…" | analysis | 46.4% | ✗ (true: hot_take) |
-| "Interesting observation since the current era of NBA stars has been dominated by European stars…" | analysis | 45.3% | ✓ |
+| "i think this stat is only counting players… with jokic…" | analysis | 46.4% | ✗ |
+| "Interesting observation… European stars like Luka, Jokic and Giannis…" | analysis | 45.3% | ✓ |
 
-**Why the OKC game-7 prediction is reasonable:** The post cites a specific, verifiable historical ranking (7th largest Game 7 margin) — exactly the kind of evidence-backed claim the `analysis` definition describes.
+**Why OKC game-7 is reasonable:** cites a specific, verifiable historical ranking — exactly what `analysis` describes.
 
 ---
 
 ## Reflection: Intended vs. Learned
 
-**What I intended:** Three-way distinction based on *argument structure* — does the post reason with evidence, assert boldly, or react emotionally?
+**Intended:** Three-way distinction by *argument structure* — evidence, assertion, or emotion.
 
-**What the model learned:** A proxy for *information density*. Posts with numbers, proper nouns, cap figures, or multi-sentence structure → `analysis`. Short emotional posts → `reaction`. The `hot_take` boundary is the weakest: the model only catches hot takes when they're short and clearly opinionated; longer rants with comparisons get pulled toward analysis even without real evidence.
+**Learned:** A proxy for *information density*. Numbers, proper nouns, cap figures, multi-sentence structure → `analysis`. Short emotional posts → `reaction`. `hot_take` is weakest: longer rants with comparisons get pulled to analysis without real evidence.
 
-The high analysis recall (1.00) but lower hot_take recall (0.45) confirms this — the model would rather call something analysis than hot_take when uncertain. Confidence scores are also low across the board (37–49%), suggesting the model is appropriately uncertain on this subjective task.
+Specific failure pattern: **`hot_take` → `analysis`** accounts for 6/7 test errors. The model never confuses `analysis` → `hot_take`. High analysis recall (1.00) + low hot_take recall (0.45) = model defaults to analysis when uncertain. Confidence scores cluster at 37–48%, so the model knows it's uncertain on this subjective task.
+
+---
+
+## Stretch Features
+
+### Inter-Annotator Reliability (+1pt)
+
+35 held-out examples independently labeled by two annotators (blind, same definitions):
+
+| Metric | Value |
+|--------|-------|
+| Percent agreement | **82.9%** (29/35) |
+| Cohen's κ | **0.73** (substantial agreement) |
+
+**Disagreement pairs:** hot_take vs reaction (3), hot_take vs analysis (2), analysis vs hot_take (1).
+
+**Where they disagreed:** Highlight/link posts ("Alex Caruso highlights from game 7") — one annotator saw title-style hot_take, the other saw reaction. Posts with embedded reporting language (Stein tweet) split hot_take vs analysis.
+
+Data: [`data/inter_annotator_sample.csv`](data/inter_annotator_sample.csv) · Script: `scripts/inter_annotator.py`
+
+### Confidence Calibration (+1pt)
+
+| Confidence bucket | n | Accuracy | Avg confidence |
+|-------------------|--:|---------:|---------------:|
+| 0%–35% | 2 | 50.0% | 34.3% |
+| 35%–40% | 10 | 100.0% | 38.1% |
+| 40%–45% | 9 | 55.6% | 41.9% |
+| 45%–50% | 11 | 81.8% | 47.0% |
+| 50%+ | 1 | 100.0% | 50.0% |
+
+**Verdict:** Weakly calibrated but directionally correct — accuracy rises from 50% (lowest bucket) to 82–100% (45%+ confidence). Most predictions sit at 37–48% confidence, reflecting appropriate uncertainty on a subjective 3-class task.
+
+Chart: [`calibration_chart.png`](calibration_chart.png) · Data: [`data/calibration_results.json`](data/calibration_results.json)
+
+### Error Pattern Analysis (+1pt)
+
+**Systematic pattern: `hot_take` → `analysis` on "fact-decorated opinions."**
+
+| Evidence | Count |
+|----------|------:|
+| Test errors with this pattern | 6/7 |
+| Avg post length | 142 chars |
+| Posts containing numbers | 5/6 |
+| Posts with proper nouns (players/teams) | 6/6 |
+
+The model treats **presence of facts** as **presence of argument**. It does not distinguish one embedded stat used for effect vs. a multi-point analytical chain. Short reactions with opinion framing ("SGA flops…") are a secondary failure mode (1/7 errors).
+
+**Fix:** Add 30+ training examples of single-stat hot_takes and short opinionated reactions explicitly labeled.
+
+### Deployed Interface (+1pt)
+
+Gradio web UI accepts a new post and shows predicted label + per-class confidence.
+
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+Opens a browser at `http://127.0.0.1:7860`. CLI alternative: `python scripts/predict.py "your post here"`.
 
 ---
 
 ## Spec Reflection
 
-**How the spec helped:** Requiring label definitions and edge-case rules *before* annotation prevented the vague good/bad taxonomy trap. The baseline comparison requirement made it obvious that fine-tuning added real value (+45pp over zero-shot).
+**How the spec helped:** Requiring label definitions and edge-case rules *before* annotation prevented a vague good/bad taxonomy. The baseline comparison requirement proved fine-tuning added +45pp over zero-shot.
 
-**Where implementation diverged:** I ran training locally via `scripts/train_and_evaluate.py` instead of only using Colab — same model and hyperparameters, but faster iteration. Data was collected via PullPush API because Reddit's live JSON API returned 403 from this environment.
+**Where implementation diverged:** Trained on **Google Colab (T4)** per spec, but also ran `scripts/train_and_evaluate.py` locally for faster iteration. Data collected via PullPush API because Reddit's live JSON API returned 403.
 
 ---
 
 ## AI Usage
 
-1. **Annotation pre-labeling (Groq):** Directed `llama-3.3-70b-versatile` to classify each fetched post using my label definitions. It pre-labeled 300 examples; I reviewed all 219 in the final dataset and corrected ~18% (mostly hot_take ↔ analysis boundaries).
+1. **Annotation pre-labeling (Groq):** Pre-labeled 300 posts with `llama-3.3-70b-versatile`; manually reviewed all 219 and corrected ~18% (mostly hot_take ↔ analysis).
 
-2. **Label stress-testing (Claude):** Before annotation, asked Claude to generate boundary posts between analysis and hot_take. It produced "Curry's 3PT% is down 4% — he's clearly declining." I used this to tighten the one-stat rule in `planning.md`.
+2. **Label stress-testing (Claude):** Generated boundary posts before annotation. Produced "Curry's 3PT% is down 4% — he's clearly declining." → tightened one-stat rule in `planning.md`.
 
-3. **Failure pattern analysis (Claude):** Pasted misclassified examples; Claude flagged "length/comparative structure → false analysis" and "single embedded fact → false analysis." Verified both patterns against 6+ test errors — confirmed in confusion matrix (all hot_take errors → analysis).
+3. **Failure pattern analysis (Claude):** Pasted misclassified examples; flagged length/comparative-structure → false analysis. Verified against all 6 hot_take→analysis errors in confusion matrix.
+
+4. **Code scaffolding (Cursor):** Generated `collect_data.py`, `train_and_evaluate.py`, and `app.py`; I overrode label definitions, balancing logic, and hyperparameter choices.
 
 ---
 
-## Running the Classifier
+## Demo Video
 
-```bash
-pip install -r requirements.txt
-python scripts/train_and_evaluate.py   # train + evaluate (needs GROQ_API_KEY in .env)
-python scripts/predict.py "NO WAY THAT WAS A FLAGRANT LMAOOO"
-```
+Record 3–5 minutes showing:
 
-**Demo examples for video:**
+1. **Interface:** `python app.py` → classify 3–5 posts with label + confidence visible
+2. **Correct prediction:** Jokic on/off stats → `analysis` (~49%) — "has verifiable evidence"
+3. **Incorrect prediction:** Thunder cap post → `analysis` but labeled `hot_take` — "one fact, assertive framing"
+4. **Evaluation walkthrough:** README metrics table + confusion matrix
+
+**CLI demo commands:**
 ```bash
+cd ai201-project3-takemeter
+python app.py
+# or:
 python scripts/predict.py "Jokic's on/off net rating is +18.4 — Denver's offense drops from 118 ORtg to 102 when he sits."
 python scripts/predict.py "Luka is already a top-5 player all-time and it's not close."
 python scripts/predict.py "SGA flops on the elbow to the face"
-python scripts/predict.py "That was intentional. The Thunder were 30M under the cap..."
 ```
 
 ---
@@ -216,15 +299,11 @@ python scripts/predict.py "That was intentional. The Thunder were 30M under the 
 
 | File | Description |
 |------|-------------|
-| `planning.md` | Design doc (labels, edge cases, metrics, AI plan) |
+| `planning.md` | Design doc |
 | `data/labeled_posts.csv` | 219 labeled examples |
-| `evaluation_results.json` | Full metrics for both models |
-| `confusion_matrix.png` | Confusion matrix visualization |
-| `model/` | Saved fine-tuned DistilBERT weights |
-| `scripts/` | Data collection, training, inference |
-
----
-
-## Demo Video
-
-> **TODO:** Record 3–5 min video showing `predict.py` on 3–5 posts, one correct prediction explained, one incorrect prediction explained, and a brief walkthrough of this evaluation report.
+| `data/inter_annotator_sample.csv` | 35 dual-annotated examples |
+| `evaluation_results.json` | Full metrics |
+| `confusion_matrix.png` | Confusion matrix |
+| `calibration_chart.png` | Calibration analysis |
+| `app.py` | Gradio web interface |
+| `scripts/` | Collection, training, inference, stretch analyses |

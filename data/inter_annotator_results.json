@@ -1,0 +1,46 @@
+{
+  "n_examples": 35,
+  "annotator_a": "Primary author (manual review after Groq pre-label)",
+  "annotator_b": "Secondary reviewer (independent blind pass, stricter analysis threshold)",
+  "percent_agreement": 0.8286,
+  "cohens_kappa": 0.7335,
+  "disagreement_count": 6,
+  "disagreement_pairs": {
+    "hot_take vs reaction": 3,
+    "hot_take vs analysis": 2,
+    "analysis vs hot_take": 1
+  },
+  "disagreements": [
+    {
+      "text": "Alex Caruso highlights from game 7",
+      "annotator_a": "hot_take",
+      "annotator_b": "reaction"
+    },
+    {
+      "text": "[Stein]The Bucks, league sources say, remain hopeful Giannis Antetokounmpo will decide against asking to be dealt after a third successive first-round playoff exit and choose instead to extend a career that has spanned 12 seasons as a Buck to date.",
+      "annotator_a": "hot_take",
+      "annotator_b": "analysis"
+    },
+    {
+      "text": "Alex Caruso highlights from game 7.",
+      "annotator_a": "hot_take",
+      "annotator_b": "reaction"
+    },
+    {
+      "text": "[Highlight] Aaron Gordon splashes the 3-pointer",
+      "annotator_a": "hot_take",
+      "annotator_b": "reaction"
+    },
+    {
+      "text": "Nikola Jokic on how this offseason will be compared to last: \"The next couple of days is gonna be a lot of beer probably\"",
+      "annotator_a": "analysis",
+      "annotator_b": "hot_take"
+    },
+    {
+      "text": "Tim Connelly built the championship roster. Calvin Booth systematically dismembered it and replaced it with a roster that looks like a rebuilding team outside of the starting 5",
+      "annotator_a": "hot_take",
+      "annotator_b": "analysis"
+    }
+  ],
+  "disagreement_analysis": "6/35 disagreements (82.9% agreement, \u03ba=0.73). Conflicts cluster on hot_take vs analysis (embedded facts) and hot_take vs reaction (highlight/link posts). Clear-cut analysis and reaction posts agreed 100%."
+}
